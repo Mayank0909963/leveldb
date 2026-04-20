@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values.
 
 > **This repository is receiving very limited maintenance. We will only review the following types of changes.**
@@ -244,3 +245,6 @@ in util/env_posix.cc.
 
 * **include/leveldb/table.h, include/leveldb/table_builder.h**: Lower-level modules that most
 clients probably won't use directly.
+=======
+# leveldb
+>>>>>>> 57cc3d418a0632b7d6584e41341fb1d82ed09daf
