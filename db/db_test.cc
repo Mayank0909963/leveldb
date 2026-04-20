@@ -2125,6 +2125,18 @@ class ModelDB : public DB {
     assert(false);  // Not implemented
     return Status::NotFound(key);
   }
+  
+  Status Scan(const ReadOptions&, const Slice& start_key,
+            const Slice& end_key,
+            std::vector<std::pair<std::string, std::string>>* result) override {
+  return Status::NotSupported("Scan not supported in ModelDB");
+  }
+
+  Status DeleteRange(const WriteOptions& options, const Slice& start_key,
+                     const Slice& end_key) override {
+    return Status::NotSupported("DeleteRange not supported in ModelDB");
+  }
+
   Iterator* NewIterator(const ReadOptions& options) override {
     if (options.snapshot == nullptr) {
       KVMap* saved = new KVMap;

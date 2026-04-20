@@ -4,14 +4,6 @@
 
 #include "db/db_impl.h"
 
-#include <algorithm>
-#include <atomic>
-#include <cstdint>
-#include <cstdio>
-#include <set>
-#include <string>
-#include <vector>
-
 #include "db/builder.h"
 #include "db/db_iter.h"
 #include "db/dbformat.h"
@@ -22,11 +14,20 @@
 #include "db/table_cache.h"
 #include "db/version_set.h"
 #include "db/write_batch_internal.h"
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <cstdio>
+#include <set>
+#include <string>
+#include <vector>
+
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "leveldb/status.h"
 #include "leveldb/table.h"
 #include "leveldb/table_builder.h"
+
 #include "port/port.h"
 #include "table/block.h"
 #include "table/merger.h"
@@ -1164,6 +1165,38 @@ Status DBImpl::Get(const ReadOptions& options, const Slice& key,
   current->Unref();
   return s;
 }
+
+Status DBImpl::Scan(const ReadOptions& options, const Slice& start_key,
+                    const Slice& end_key,
+                    std::vector<std::pair<std::string, std::string>>* result) {
+  Iterator* iter = NewIterator(options);
+  for (iter->Seek(start_key); iter->Valid() && iter->key().compare(end_key) < 0; iter->Next()) {
+    result->push_back({iter->key().ToString(), iter->value().ToString()});
+  }
+  Status s = iter->status();
+  delete iter;
+  return s;
+}
+
+Status DBImpl::DeleteRange(const WriteOptions& options, const Slice& start_key,
+                         const Slice& end_key) {
+  WriteBatch batch;
+  Iterator* iter = NewIterator(ReadOptions());
+  for (iter->Seek(start_key); iter->Valid() && iter->key().compare(end_key) < 0; iter->Next()) {
+    batch.Delete(iter->key());
+  }
+  Status s = iter->status();  
+  if(!s.ok()) {
+    delete iter;
+    return s;
+  }
+  
+  delete iter;
+
+  return Write(options, &batch);
+}
+  
+
 
 Iterator* DBImpl::NewIterator(const ReadOptions& options) {
   SequenceNumber latest_snapshot;
