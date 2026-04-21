@@ -260,6 +260,8 @@ int main() {
   RunEdgeCases(db);
   RunStressTest(db);
 
+  db->ForceFullCompaction();
+
   delete db;
   system(("rm -rf " + kPath).c_str());
 

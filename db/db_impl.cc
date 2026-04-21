@@ -14,6 +14,7 @@
 #include "db/table_cache.h"
 #include "db/version_set.h"
 #include "db/write_batch_internal.h"
+#include <iostream>
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
@@ -597,6 +598,49 @@ void DBImpl::CompactRange(const Slice* begin, const Slice* end) {
   }
 }
 
+Status DBImpl::ForceFullCompaction() {
+  CompactionStats before;
+  {
+    MutexLock l(&mutex_);
+    for(int i=0; i<config::kNumLevels; i++) {
+      before.Add(stats_[i]);
+    }
+  }
+
+  int max_level_with_files = 1;
+  {
+    MutexLock l(&mutex_);
+    for (int level = 1; level < config::kNumLevels; level++) {
+      if (versions_->NumLevelFiles(level) > 0) {
+        max_level_with_files = level;
+      }
+    }
+  }
+
+  TEST_CompactMemTable();
+  for (int level = 0; level < max_level_with_files; level++) {
+    TEST_CompactRange(level, nullptr, nullptr);
+  }
+
+  CompactionStats after;
+  {
+    MutexLock l(&mutex_);
+    for(int i=0; i<config::kNumLevels; i++) {
+      after.Add(stats_[i]);
+    }
+  }
+
+  std::cout << "\n=== Manual Full Compaction Statistics ===\n";
+  std::cout << "Compactions executed: " << (after.num_compactions - before.num_compactions) << "\n";
+  std::cout << "Number of input files: " << (after.num_input_files - before.num_input_files) << "\n";
+  std::cout << "Number of output files: " << (after.num_output_files - before.num_output_files) << "\n";
+  std::cout << "Total bytes read: " << (after.bytes_read - before.bytes_read) << "\n";
+  std::cout << "Total bytes written: " << (after.bytes_written - before.bytes_written) << "\n";
+  std::cout << "=========================================\n\n";
+
+  return Status::OK();
+}
+
 void DBImpl::TEST_CompactRange(int level, const Slice* begin,
                                const Slice* end) {
   assert(level >= 0);
@@ -1034,11 +1078,14 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 
   CompactionStats stats;
   stats.micros = env_->NowMicros() - start_micros - imm_micros;
+  stats.num_compactions = 1;
   for (int which = 0; which < 2; which++) {
+    stats.num_input_files += compact->compaction->num_input_files(which);
     for (int i = 0; i < compact->compaction->num_input_files(which); i++) {
       stats.bytes_read += compact->compaction->input(which, i)->file_size;
     }
   }
+  stats.num_output_files = compact->outputs.size();
   for (size_t i = 0; i < compact->outputs.size(); i++) {
     stats.bytes_written += compact->outputs[i].file_size;
   }

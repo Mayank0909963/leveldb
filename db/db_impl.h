@@ -10,9 +10,9 @@
 #include <set>
 #include <string>
 
-#include "db/dbformat.h"
-#include "db/log_writer.h"
-#include "db/snapshot.h"
+#include "dbformat.h"
+#include "log_writer.h"
+#include "snapshot.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "port/port.h"
@@ -59,6 +59,8 @@ class DBImpl : public DB {
   void GetApproximateSizes(const Range* range, int n, uint64_t* sizes) override;
   void CompactRange(const Slice* begin, const Slice* end) override;
 
+  Status ForceFullCompaction() override;
+
   // Extra methods (for testing) that are not in the public DB interface
 
   // Compact any files in the named level that overlap [*begin,*end]
@@ -98,17 +100,23 @@ class DBImpl : public DB {
   // Per level compaction stats.  stats_[level] stores the stats for
   // compactions that produced data for the specified "level".
   struct CompactionStats {
-    CompactionStats() : micros(0), bytes_read(0), bytes_written(0) {}
+    CompactionStats() : micros(0), bytes_read(0), bytes_written(0), num_compactions(0), num_input_files(0), num_output_files(0) {}
 
     void Add(const CompactionStats& c) {
       this->micros += c.micros;
       this->bytes_read += c.bytes_read;
       this->bytes_written += c.bytes_written;
+      this->num_compactions += c.num_compactions;
+      this->num_input_files += c.num_input_files;
+      this->num_output_files += c.num_output_files;
     }
 
     int64_t micros;
     int64_t bytes_read;
     int64_t bytes_written;
+    int64_t num_compactions;
+    int64_t num_input_files;
+    int64_t num_output_files;
   };
 
   Iterator* NewInternalIterator(const ReadOptions&,

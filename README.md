@@ -243,7 +243,8 @@ and is used to report success and various kinds of errors.
 Abstraction of the OS environment.  A posix implementation of this interface is
 in util/env_posix.cc.
 
-* **include/leveldb/table.h, include/leveldb/table_builder.h**: Lower-level modules that most
+*
+**include/leveldb/table.h, include/leveldb/table_builder.h**: Lower-level modules that most
 clients probably won't use directly.
 =======
 # leveldb

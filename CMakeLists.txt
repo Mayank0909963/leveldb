@@ -290,6 +290,24 @@ add_executable(leveldbutil
 )
 target_link_libraries(leveldbutil leveldb)
 
+if(LEVELDB_BUILD_TESTS AND NOT EXISTS "${PROJECT_SOURCE_DIR}/third_party/googletest/CMakeLists.txt")
+  find_package(GTest QUIET)
+  if (GTest_FOUND AND TARGET GTest::gmock AND TARGET GTest::gtest AND TARGET GTest::gtest_main)
+    if (NOT TARGET gmock)
+      add_library(gmock ALIAS GTest::gmock)
+    endif()
+    if (NOT TARGET gtest)
+      add_library(gtest ALIAS GTest::gtest)
+    endif()
+    if (NOT TARGET gtest_main)
+      add_library(gtest_main ALIAS GTest::gtest_main)
+    endif()
+  else()
+    message(WARNING "GoogleTest source directory not found and no usable installed GTest package was located; disabling LEVELDB_BUILD_TESTS.")
+    set(LEVELDB_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 if(LEVELDB_BUILD_TESTS)
   enable_testing()
 
@@ -300,14 +318,20 @@ if(LEVELDB_BUILD_TESTS)
   set(build_gmock ON)
 
   # This project is tested using GoogleTest.
-  add_subdirectory("third_party/googletest")
+  if (EXISTS "${PROJECT_SOURCE_DIR}/third_party/googletest/CMakeLists.txt")
+    add_subdirectory("third_party/googletest")
+  endif()
 
   # GoogleTest triggers a missing field initializers warning.
   if(LEVELDB_HAVE_NO_MISSING_FIELD_INITIALIZERS)
-    set_property(TARGET gtest
-        APPEND PROPERTY COMPILE_OPTIONS -Wno-missing-field-initializers)
-    set_property(TARGET gmock
-        APPEND PROPERTY COMPILE_OPTIONS -Wno-missing-field-initializers)
+    if(TARGET gtest)
+      set_property(TARGET gtest
+          APPEND PROPERTY COMPILE_OPTIONS -Wno-missing-field-initializers)
+    endif()
+    if(TARGET gmock)
+      set_property(TARGET gmock
+          APPEND PROPERTY COMPILE_OPTIONS -Wno-missing-field-initializers)
+    endif()
   endif(LEVELDB_HAVE_NO_MISSING_FIELD_INITIALIZERS)
 
   add_executable(leveldb_tests "")
