@@ -5,7 +5,7 @@ all: test
 build:
 	@echo "Configuring and Building LevelDB via CMake..."
 	@mkdir -p build
-	@cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DLEVELDB_BUILD_BENCHMARKS=OFF -DLEVELDB_BUILD_TESTS=OFF ..
+	@cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 ..
 	@cmake --build build -j
 
 test: build

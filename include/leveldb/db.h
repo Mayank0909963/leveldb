@@ -6,7 +6,6 @@
 #define STORAGE_LEVELDB_INCLUDE_DB_H_
 
 #include <cstdint>
-#include <cstdio>
 #include <vector>
 #include <string>
 #include <utility>
