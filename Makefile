@@ -3,6 +3,8 @@
 all: test
 
 build:
+	@echo "Updating submodules..."
+	@git submodule update --init --recursive
 	@echo "Configuring and Building LevelDB via CMake..."
 	@mkdir -p build
 	@cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 ..
