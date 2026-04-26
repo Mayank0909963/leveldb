@@ -15,6 +15,7 @@
 #include "leveldb/env.h"
 #include "leveldb/filter_policy.h"
 #include "leveldb/table.h"
+#include "leveldb/write_batch.h"
 #include "port/thread_annotations.h"
 #include "util/logging.h"
 #include "util/mutexlock.h"
