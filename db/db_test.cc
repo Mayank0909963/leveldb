@@ -2137,6 +2137,10 @@ class ModelDB : public DB {
     return Status::NotSupported("DeleteRange not supported in ModelDB");
   }
 
+  Status ForceFullCompaction() override {
+    return Status::NotSupported("ForceFullCompaction not supported in ModelDB");
+  }
+
   Iterator* NewIterator(const ReadOptions& options) override {
     if (options.snapshot == nullptr) {
       KVMap* saved = new KVMap;
